@@ -158,7 +158,7 @@ Fix this issue removing the Emacs package php-cs-fixer or updating the program p
 
 (defvar php-cs-fixer-is-command-ok-var nil)
 
-(defun php-cs-fixer--expand-config-option ()
+(defun php-cs-fixer--expand-config-option (&optional fallback)
   "Private Method.
 Expand the `php-cs-fixer-config-option` variable. If this is a string, then return it as is.
 If it's a symbol then do whatever magic that symbol suggests."
@@ -167,7 +167,8 @@ If it's a symbol then do whatever magic that symbol suggests."
          (let* ((proj-file-name ".php-cs-fixer.dist.php")
                 (proj-root (locate-dominating-file default-directory proj-file-name)))
            (if proj-root (expand-file-name (concat proj-root proj-file-name))
-             (error "Can't locate project file: %s in source tree" proj-file-name))))
+             (if fallback fallback
+                 (error "Can't locate project file: %s in source tree" proj-file-name)))))
         (t (error "Unknown php-cs-fixer-config-option setting: %s",
                   php-cs-fixer-config-option))))
          
@@ -257,6 +258,7 @@ Add this to .emacs to run php-cs-fix on the current buffer when saving:
          (string= (file-name-extension buffer-file-name) "php")
          (or (not (boundp 'geben-temporary-file-directory))
              (not (string-match geben-temporary-file-directory (file-name-directory buffer-file-name))))
+         (file-exists-p (php-cs-fixer--expand-config-option 'not-found))
          ) (php-cs-fixer-fix)))
 
 (provide 'php-cs-fixer)
