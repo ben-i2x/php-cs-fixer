@@ -38,7 +38,8 @@
   "The 'php-cs-fixer' config option.
 If not nil `php-cs-rules-level-part-options`
 and `php-cs-rules-fixer-part-options` are not used."
-  :type 'string
+  :type '(choice string
+                 (const :tag "Project File" project))
   :group 'php-cs-fixer)
 
 (defcustom php-cs-fixer-rules-level-part-options '("@Symfony")
@@ -61,6 +62,14 @@ and `php-cs-rules-fixer-part-options` are not used."
 These options are not part of `php-cs-fixer-rules-level-part-options`."
   :type '(repeat string)
   :group 'php-cs-fixer)
+
+(defcustom php-cs-fixer-debug nil
+  "If set to true be in debug mode. Don't clean up buffers and such so you can
+inspect what went wrong"
+  :type '(choice (const :tag "On" t)
+                 (const :tag "Off" nil))
+  :group 'php-cs-fixer)
+
 
 ;; Copy of go--goto-line from https://github.com/dominikh/go-mode.el
 (defun php-cs-fixer--goto-line (line)
@@ -149,6 +158,21 @@ Fix this issue removing the Emacs package php-cs-fixer or updating the program p
 
 (defvar php-cs-fixer-is-command-ok-var nil)
 
+(defun php-cs-fixer--expand-config-option ()
+  "Private Method.
+Expand the `php-cs-fixer-config-option` variable. If this is a string, then return it as is.
+If it's a symbol then do whatever magic that symbol suggests."
+  (cond ((stringp php-cs-fixer-config-option) php-cs-fixer-config-option)
+        ((eq php-cs-fixer-config-option 'project)
+         (let* ((proj-file-name ".php-cs-fixer.dist.php")
+                (proj-root (locate-dominating-file default-directory proj-file-name)))
+           (if proj-root (expand-file-name (concat proj-root proj-file-name))
+             (error "Can't locate project file: %s in source tree" proj-file-name))))
+        (t (error "Unknown php-cs-fixer-config-option setting: %s",
+                  php-cs-fixer-config-option))))
+         
+    
+
 (defun php-cs-fixer--is-command-ok ()
   "Private Method.
 Return t if the command `php-cs-fixer-command`
@@ -204,7 +228,7 @@ for the next calls."
                             nil errbuf nil
                             "fix"
                             (if php-cs-fixer-config-option
-                                (concat "--config=" (shell-quote-argument php-cs-fixer-config-option))
+                                (concat "--config=" (shell-quote-argument (php-cs-fixer--expand-config-option)))
                               (php-cs-fixer--build-rules-options))
                             "--using-cache=no"
                             "--quiet"
@@ -215,9 +239,10 @@ for the next calls."
                 (message "Applied php-cs-fixer")))
           (warn (with-current-buffer errbuf (buffer-string)))))
 
-      (php-cs-fixer--kill-error-buffer errbuf)
-      (kill-buffer patchbuf)
-      (delete-file tmpfile)
+      (unless php-cs-fixer-debug
+        (php-cs-fixer--kill-error-buffer errbuf)
+        (kill-buffer patchbuf)
+        (delete-file tmpfile))
       )))
 
 ;;;###autoload
