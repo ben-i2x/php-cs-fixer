@@ -81,7 +81,7 @@ inspect what went wrong"
   "Delete the current line without putting it in the `kill-ring`.
 Derived from the function `kill-whole-line'.
 ARG is defined as for that function."
-  (let (kill-ring) (kill-whole-line arg)))
+  (kill-whole-line arg))
 
 ;; Derivated of go--apply-rcs-patch from https://github.com/dominikh/go-mode.el
 (defun php-cs-fixer--apply-rcs-patch (patch-buffer)
