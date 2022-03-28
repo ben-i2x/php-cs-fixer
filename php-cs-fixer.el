@@ -171,8 +171,8 @@ If it's a symbol then do whatever magic that symbol suggests."
                  (error "Can't locate project file: %s in source tree" proj-file-name)))))
         (t (error "Unknown php-cs-fixer-config-option setting: %s",
                   php-cs-fixer-config-option))))
-         
-    
+
+
 
 (defun php-cs-fixer--is-command-ok ()
   "Private Method.
@@ -258,7 +258,7 @@ Add this to .emacs to run php-cs-fix on the current buffer when saving:
          (string= (file-name-extension buffer-file-name) "php")
          (or (not (boundp 'geben-temporary-file-directory))
              (not (string-match geben-temporary-file-directory (file-name-directory buffer-file-name))))
-         (file-exists-p (php-cs-fixer--expand-config-option 'not-found))
+         (file-exists-p (php-cs-fixer--expand-config-option "not-found"))
          ) (php-cs-fixer-fix)))
 
 (provide 'php-cs-fixer)
